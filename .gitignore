@@ -1,0 +1,7 @@
+cache
+dist
+
+src/app.db
+**/*.DS_Store
+node_modules/
+.idea

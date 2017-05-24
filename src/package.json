@@ -1,0 +1,19 @@
+{
+  "name": "compressor",
+  "version": "1.0.0",
+  "bundle": "com.twitup.bundle",
+  "main": "app.js",
+  "keywords": [
+    "twitter",
+    "autoreply"
+  ],
+  "author": "rwson",
+  "license": "MIT",
+  "dependencies": {
+    "electron-notification-polyfill": "^1.2.1",
+    "imagemin": "^5.3.1",
+    "imagemin-jpegtran": "^5.0.2",
+    "imagemin-pngquant": "^5.0.0",
+    "sweetalert2": "^6.6.0"
+  }
+}
