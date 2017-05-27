@@ -1,12 +1,14 @@
 const { dialog } = require("electron").remote,
     path = require("path"),
     os = require("os"),
-    fs = require("fs"),
-    NotificationPolyfill = require("electron-notification-polyfill"),
+    directoryFiles = require("directory-files"),
+    async = require("async"),
     imagemin = require("imagemin"),
     imageminJpegtran = require("imagemin-jpegtran"),
     imageminPngquant = require("imagemin-pngquant"),
+    NotificationPolyfill = require("electron-notification-polyfill"),
     menu = require("../../common/menu"),
+
     doc = document,
     container = doc.querySelector("#container"),
     tip = container.querySelector(".tip-container"),
@@ -25,11 +27,12 @@ menu.create();
 let distPath = path.join(os.homedir(), "Desktop"),
     level, notification, timeout, prefix;
 
+let files = [],
+    tasks = [];
+
 if (getItem("distPath")) {
     distPath = getItem("distPath");
-    position.innerHTML = distPath;
 }
-position.innerHTML = distPath;
 
 if (getItem("prefix")) {
     prefix = getItem("prefix");
@@ -41,6 +44,8 @@ if (getItem("prefix")) {
 if (getItem("level")) {
     level = getItem("level");
 }
+
+position.innerHTML = distPath;
 
 const Notification = (process.platform === "win32" && parseFloat(os.release()) < 10) ?
     NotificationPolyfill : window.Notification;
@@ -66,13 +71,36 @@ addEvent(container, "click", function(e) {
             message: "请选择您要压缩的图片文件或图片目录"
         }, function(res) {
             if (res && res.length) {
-                res = res.map(function(item) {
-                    return toImgPath(item);
+                files = [];
+                tasks = [];
+
+                res.forEach(function(item) {
+                    tasks.push(function(callback) {
+                        if (isImagePath(item)) {
+                            files.push(item);
+                            callback();
+                        } else {
+                            directoryFiles(item)
+                                .then(function(res) {
+                                    files = res.filter(function(file) {
+                                        return isImagePath(file);
+                                    });
+                                    callback();
+                                });
+                        }
+                    });
                 });
 
-                console.log(level);
+                tasks.push(function() {
+                    compress(files, level);
+                });
 
-                compress(res, level);
+                async.waterfall(tasks, function() {
+                    notification = new Notification("compress", {
+                        body: "压缩失败!",
+                        icon: path.join(__dirname, "../../assets/imags/notifaction.png")
+                    });
+                });
             }
         });
     }
@@ -174,7 +202,6 @@ function compress(files, quality) {
         });
         loading.style.display = "none";
     }).catch((e) => {
-        console.log(e);
         notification = new Notification("compress", {
             body: "压缩失败, 请检查您的图片是否正确或者调整压缩质量",
             icon: path.join(__dirname, "../../assets/imags/notifaction.png")
@@ -212,8 +239,12 @@ function getItem(key) {
     return res;
 }
 
+function isImagePath(path) {
+    return /\.jpg|\.png|\.jpeg$/.test(path);
+}
+
 function toImgPath(path) {
-    if (!/\.jpg|\.png|\.jpeg$/.test(path)) {
+    if (!isImagePath(path)) {
         path = path + "/*.{jpg,png}";
     }
     return path;

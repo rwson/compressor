@@ -10,6 +10,7 @@
   "license": "",
   "devDependencies": {
     "gulp": "^3.9.0",
-    "gulp-electron": "0.0.10"
+    "gulp-electron": "0.0.10",
+    "gulp-jstransform": "^1.0.0"
   }
 }

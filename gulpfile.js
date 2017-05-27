@@ -5,7 +5,10 @@
 
 var gulp = require('gulp'),
     electron = require('gulp-electron'),
-    info = require('./src/package.json');
+    jstransform = require('gulp-jstransform'),
+    info = require('./src/package.json'),
+    fs = require('fs'),
+    path = require('path');
 
 gulp.task('electron', function() {
     gulp.src("")
@@ -34,4 +37,10 @@ gulp.task('electron', function() {
         }
     }))
     .pipe(gulp.dest(""));
+});
+
+gulp.task('jstransform', function() {
+  gulp.src('./src/windows/*.js')
+    .pipe(jstransform().on('error', gutil.log))
+    .pipe(gulp.dest('./public/'))
 });
